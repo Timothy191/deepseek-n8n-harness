@@ -1,0 +1,30 @@
+[Unit]
+Description=DeepSeek x n8n harness (MCP agent bridge)
+After=docker.service network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=120
+StartLimitBurst=4
+
+[Service]
+Type=simple
+# The harness runs as a persistent worker: it connects to n8n MCP, and reads
+# prompts from /home/database/Projects/deepseek-n8n-harness/queue.txt
+# (append a line to trigger a run, results are written next to the prompt).
+User=database
+Group=database
+WorkingDirectory=/home/database/Projects/deepseek-n8n-harness
+EnvironmentFile=/home/database/Projects/deepseek-n8n-harness/.env
+ExecStart=/home/database/.local/share/mise/installs/node/26.8.1/bin/node /home/database/Projects/deepseek-n8n-harness/dist/worker.js
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/database/Projects/deepseek-n8n-harness/queue
+
+[Install]
+WantedBy=multi-user.target
