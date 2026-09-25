@@ -39,6 +39,7 @@ async function main() {
               workflow: file.replace(/\.prompt$/, ""),
               finishedAt: new Date().toISOString(),
               stats,
+              answer: stats.answer,
               conversations: agent.conversationLength,
             };
             await writeFile(resultPath, JSON.stringify(entry, null, 2) + "\n", {

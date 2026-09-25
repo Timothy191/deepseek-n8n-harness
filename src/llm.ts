@@ -21,7 +21,7 @@ interface ToolChoice {
   function: { name: string };
 }
 
-export class DeepSeekClient {
+export class LlmClient {
   constructor(private config: Config) {}
 
   private async *streamCompletion(
@@ -35,7 +35,7 @@ export class DeepSeekClient {
     finishReason: string | null;
   }> {
     const body: Record<string, unknown> = {
-      model: this.config.deepseekModel,
+      model: this.config.llmModel,
       messages,
       stream: true,
       max_tokens: maxTokens,
@@ -43,21 +43,21 @@ export class DeepSeekClient {
     if (tools.length > 0) body.tools = tools;
     if (toolChoice !== undefined) body.tool_choice = toolChoice;
 
-    const response = await fetch(`${this.config.deepseekBaseUrl}/chat/completions`, {
+    const response = await fetch(`${this.config.llmBaseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.config.deepseekApiKey}`,
+        Authorization: `Bearer ${this.config.llmApiKey}`,
       },
       body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const text = await response.text().catch(() => "");
-      throw new Error(`DeepSeek API ${response.status}: ${text.slice(0, 1000)}`);
+      throw new Error(`LLM API ${response.status}: ${text.slice(0, 1000)}`);
     }
 
-    if (!response.body) throw new Error("DeepSeek stream returned no body");
+    if (!response.body) throw new Error("LLM stream returned no body");
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();

@@ -1,5 +1,5 @@
 [Unit]
-Description=DeepSeek x n8n harness (MCP agent bridge)
+Description=Ollama x n8n harness (MCP agent bridge)
 After=docker.service network-online.target
 Wants=network-online.target
 StartLimitIntervalSec=120
@@ -8,8 +8,8 @@ StartLimitBurst=4
 [Service]
 Type=simple
 # The harness runs as a persistent worker: it connects to n8n MCP, and reads
-# prompts from /home/database/Projects/deepseek-n8n-harness/queue.txt
-# (append a line to trigger a run, results are written next to the prompt).
+# prompts from the project queue directory (append a line to trigger a run,
+# results are written next to the prompt).
 User=database
 Group=database
 WorkingDirectory=/home/database/Projects/deepseek-n8n-harness

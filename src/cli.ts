@@ -5,7 +5,7 @@ import { N8nMcpClient, isGranted } from "./mcp.js";
 
 const banner = `
  ╭──────────────────────────────────────────────────────╮
- │  DeepSeek x n8n harness — linked to local n8n MCP    │
+ │  Ollama x n8n harness — linked to local n8n MCP      │
  ╰──────────────────────────────────────────────────────╯`;
 
 async function runPrompt(agent: Agent, mcp: N8nMcpClient, prompt: string): Promise<void> {

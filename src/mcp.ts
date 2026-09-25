@@ -67,8 +67,8 @@ export class N8nMcpClient {
     this.transport = new StreamableHTTPClientTransport(new URL(url), transportOptions);
     this.client = new Client(
       {
-        name: "deepseek-n8n-harness",
-        version: "0.1.0",
+        name: "n8n-mcp-harness",
+        version: "0.2.0",
       },
       {
         capabilities: {},
@@ -114,7 +114,7 @@ export class N8nMcpClient {
 export function describeToolsForModel(tools: Tool[]): unknown[] {
   return tools.map((tool) => {
     // Keep the tool's input schema but strip unstructured extra fields that
-    // DeepSeek's tool-calling schema validation rejects.
+    // OpenAI-compatible tool-calling schema validation rejects.
     const input = tool.inputSchema as Record<string, unknown>;
     const cleaned: Record<string, unknown> = {
       type: input.type ?? "object",

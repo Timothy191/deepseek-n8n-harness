@@ -1,6 +1,6 @@
 import type { Config } from "./config.js";
-import type { ChatMessage, ToolCall } from "./deepseek.js";
-import { DeepSeekClient } from "./deepseek.js";
+import type { ChatMessage, ToolCall } from "./llm.js";
+import { LlmClient } from "./llm.js";
 import {
   N8nMcpClient,
   describeToolsForModel,
@@ -13,17 +13,18 @@ export interface AgentRunStats {
   errors: number;
   finished: "tool" | "stop" | "max-turns" | "error";
   latencyMs: number;
+  answer: string;
 }
 
 export class Agent {
-  private deepseek: DeepSeekClient;
+  private llm: LlmClient;
   private messages: ChatMessage[] = [];
 
   constructor(
     private config: Config,
     private mcp: N8nMcpClient,
   ) {
-    this.deepseek = new DeepSeekClient(config);
+    this.llm = new LlmClient(config);
   }
 
   get conversationLength(): number {
@@ -41,6 +42,7 @@ export class Agent {
       errors: 0,
       finished: "stop" as const,
       latencyMs: 0,
+      answer: "",
     };
     const start = Date.now();
 
@@ -53,13 +55,25 @@ export class Agent {
     if (this.messages.length === 0) {
       this.messages.push({ role: "system", content: this.config.systemPrompt });
     }
+    // Pin the exact available tool names so the model doesn't hallucinate calls.
+    if (tools.length > 0) {
+      this.messages.push({
+        role: "system",
+        content:
+          `Only these tools exist on this server — do not invent others: ` +
+          tools
+            .map((t) => (t as { name: string }).name)
+            .join(", ") +
+          `. If a needed tool isn't listed here, say what's missing instead of guessing.`,
+      });
+    }
     this.messages.push({ role: "user", content: prompt });
 
     while (stats.turns < this.config.maxTurns) {
       stats.turns++;
       let round;
       try {
-        round = await this.deepseek.round(this.messages, tools, {
+        round = await this.llm.round(this.messages, tools, {
           onDelta: (d) => emit(`\x1b[2m${d}\x1b[0m`),
         });
       } catch (err) {
@@ -77,6 +91,7 @@ export class Agent {
       if (round.toolCalls.length === 0) {
         stats.finished = round.finishReason === "tool_calls" ? "tool" : "stop";
         emit(`\n${round.content}`);
+        stats.answer = round.content;
         break;
       }
 
@@ -152,10 +167,13 @@ export class Agent {
 
   private compact() {
     const max = 12_000;
-    if (this.messages.length <= 4) return;
+    // Keep the leading system messages (main prompt + tool-list) intact.
+    const sysCount = this.messages.filter((m) => m.role === "system").length;
+    const floor = sysCount + 2;
+    if (this.messages.length <= floor) return;
     let total = this.messages.reduce((n, m) => n + (m.content?.length ?? 0), 0);
-    while (total > max && this.messages.length > 4) {
-      const [removed] = this.messages.splice(1, 1);
+    while (total > max && this.messages.length > floor) {
+      const [removed] = this.messages.splice(sysCount, 1);
       total -= removed?.content?.length ?? 0;
     }
   }

@@ -1,10 +1,10 @@
 {
-  "name": "deepseek-n8n-harness",
-  "version": "0.1.0",
-  "description": "DeepSeek-powered agent harness driving an n8n MCP server over streamable HTTP",
+  "name": "n8n-llm-harness",
+  "version": "0.2.0",
+  "description": "LLM-powered agent harness driving an n8n MCP server over streamable HTTP (Ollama local + cloud)",
   "type": "module",
   "bin": {
-    "deepseek-harness": "dist/cli.js"
+    "n8n-harness": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
